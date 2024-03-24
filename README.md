@@ -13,7 +13,7 @@ For the paternity test, we look into the edit distance in 25 sections of the gen
 
 To run secure edit distance, clone MP-SPDZ and use it's compiler like this-
 
-`Scripts\compile-run.py -E semi2k paternity_test`
+`Scripts\compile-run.py -E semi2k <path_to_Sources_folder>/paternity_test`
 
 Semi2k is the chosen Secret Sharing scheme as it supports semi-honest adversaries which is in line with our two parties.
 

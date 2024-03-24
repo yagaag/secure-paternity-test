@@ -1,41 +1,46 @@
+from Compiler.types import sint, sintbit, Array, Matrix
+from Compiler.library import for_range_opt, for_range_parallel
+from Compiler.util import min as secure_min
+
 program.use_edabit(True)
 program.set_bit_length(12)
 
-def equality(a, b):
-    '''Compute the equality matrix'''
-
-    E = Matrix(len(a), len(b), sintbit)
-    @for_range_opt(0, len(a))
-    def _(i):
-        @for_range_opt(len(b))
-        def _(j):
-            E[i][j] = a[i].not_equal(b[j])
-    # for i in range(20):
-    #     print_ln('%s', E[i].reveal())
-    return E
+def load_D(m: int, n: int):
+    '''Loads the initial D matrix'''
+    mv = max(m, n)
+    D = Matrix(m+1, n+1, sint)
+    D.assign_all(sint(mv))
+    # @for_range_parallel(m+1, m+1)
+    # def _(i):
+    for i in range(0, m+1):
+        D[i][0] = i
+    for j in range(1, n+1):
+        D[0][j] = j
+    return D
 
 def edit_dist(a, b):
     '''Computes the edit distance between two genomes'''
 
     m, n = len(a), len(b)
-    E = equality(a, b)
+    # Only consider 5% of the diagonals. Round to nearest odd number
+    t = (m//20) // 2 * 2 + 1 
+    p = (t-(n-m)) // 2 # Position of leading diagonal
+    k = -p # Mapping of first element in array
 
-    D = Matrix(m+1, n+1, sint)
-    D.assign_all(sint(0))
-    for i in range(m+1):
-        D[i][0] = sint(i)
-    for j in range(1, n+1):
-        D[0][j] = sint(j)
+    D = load_D(m, n)
 
     for i in range(m):
         for j in range(n):
-            D[i+1][j+1] = (D[i][j] + E[i][j]).min(D[i][j+1]+1).min(D[i+1][j]+1)
+            if j < k or j >= k+t:
+                continue
+            comp = a[i].not_equal(b[j])
+            D[i+1][j+1] = secure_min([D[i][j]+comp, D[i][j+1]+1, D[i+1][j]+1])
+        k+=1
 
     return D[m][n]
 
-
-m = 3400
-n = 3400
+m = 1200
+n = 1200
 a = Array(m, sint)
 b = Array(n, sint)
 
